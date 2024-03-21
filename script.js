@@ -180,7 +180,7 @@ function handleActionButtonClick(event) {
 
     analytics.track(trackName, {
         productName: product.basicInformation.Title,
-        productPrice: product.basicInformation.subtitle,
+        //productPrice: product.basicInformation.subtitle,
         ...product.trackProperties,
     });
     showProductDetailsModal(productId);
