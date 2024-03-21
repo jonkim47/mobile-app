@@ -41,12 +41,17 @@ function setBannerStyles() {
     }
 }
 
+// Call this function after the user logs in and you have set the userProfile in localStorage
 function setBannerText() {
     const bannerTextElement = document.getElementById('bannerText');
     if (bannerTextElement) {
-        bannerTextElement.textContent = config.header.bannerText;
+        const userProfile = JSON.parse(localStorage.getItem("userProfile") || "{}");
+        // Use custom banner text if available, otherwise fallback to default text
+        const bannerText = userProfile.bannerText || config.header.bannerText;
+        bannerTextElement.innerHTML = bannerText; // Allows HTML such as links if needed
     }
 }
+
 
 function setHeaderAndFooterStyles() {
     // Apply header color from config
@@ -499,22 +504,22 @@ function loadResourcesContent() {
 
 // Profile Page
 function loadProfileContent() {
-    const analytics = window.analytics;
-    // Retrieve the current user's anonymous ID from Segment
-    const anonymousId = analytics.user().anonymousId();
+    // const analytics = window.analytics;
+    // // Retrieve the current user's anonymous ID from Segment
+    // const anonymousId = analytics.user().anonymousId();
 
-    // Your Node.js server endpoint that proxies the request to the Segment Profile API
-    // Replace "http://localhost:3000" with the URL of your deployed server if necessary
-    const proxyUrl = `http://localhost:3000/api/profiles/${anonymousId}`;
+    // // Your Node.js server endpoint that proxies the request to the Segment Profile API
+    // // Replace "http://localhost:3000" with the URL of your deployed server if necessary
+    // const proxyUrl = `http://localhost:3000/api/profiles/${anonymousId}`;
 
-    axios.get(proxyUrl)
-        .then(function (response) {
-            // Log the response data to the console
-            console.log("Profile data:", response.data);
-        })
-        .catch(function (error) {
-            console.error('Error fetching profile data:', error);
-        });
+    // axios.get(proxyUrl)
+    //     .then(function (response) {
+    //         // Log the response data to the console
+    //         console.log("Profile data:", response.data);
+    //     })
+    //     .catch(function (error) {
+    //         console.error('Error fetching profile data:', error);
+    //     });
 
     const loggedIn = localStorage.getItem("loggedIn");
     if (loggedIn) {
@@ -524,26 +529,6 @@ function loadProfileContent() {
         // If the user is not logged in, show the login form
         showLoginPage();
     }
-}
-
-function showProfilePage() {
-    // Here you would retrieve user details stored in local storage and display them
-    // For now, we'll just show a generic profile page
-
-    // Retrieve the username from the localstorage
-    const username = localStorage.getItem("username");
-
-    const profileContent = `
-      <div class="container mx-auto mt-8 flex-grow">
-        <h2 class="text-2xl font-bold mb-4 text-center">Welcome, ${username}</h2>
-        <!-- Add more personalized profile content here -->
-        <div class="text-center">
-          <p class="text-lg">This is your profile page.</p>
-          <button onclick="logoutUser()" class="mt-4 bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Logout</button>
-        </div>
-      </div>
-    `;
-    document.getElementById('main-content').innerHTML = profileContent;
 }
 
 
@@ -601,23 +586,120 @@ function loginUser(username, password) {
         return;
     }
 
-    // Simulate login by setting the login state in localStorage
-    localStorage.setItem("loggedIn", true);
-    localStorage.setItem("username", username); // Store the username for the Identify call
+    const userProfile = demoProfiles.find(profile => profile.email === username);
 
-    // Segment analytics track and identify calls
+    // Regardless of whether the profile is found, perform the standard login.
+    localStorage.setItem("loggedIn", true);
+    localStorage.setItem("username", username); // Use the email as the username identifier.
+
+    // Additional profile details are stored if the profile exists in demoProfiles.js.
+    if (userProfile) {
+        localStorage.setItem("userProfile", JSON.stringify(userProfile));
+    }
+
+    // Segment analytics track and identify calls.
     analytics.track('User Logged In');
     analytics.identify(username, {
-        email: username
+        email: username,
+        // Include additional traits here if userProfile is found.
     });
 
     showProfilePage();
 }
 
+
+
+function showProfilePage() {
+    const loggedIn = localStorage.getItem("loggedIn");
+    if (!loggedIn) {
+        showLoginPage();
+        return;
+    }
+
+    // Fetch the anonymous ID from Segment's analytics library
+    const anonymousId = analytics.user().anonymousId();
+
+    // Retrieve user details
+    const username = localStorage.getItem("username");
+    const userProfile = JSON.parse(localStorage.getItem("userProfile") || "{}");
+
+    // Start building the profile content
+    let profileContent = `
+        <div class="container mx-auto mt-8 px-4 sm:px-0">
+            <h2 class="text-2xl font-bold mb-6 text-center">Profile Information</h2>
+            <div class="bg-white shadow overflow-hidden sm:rounded-lg border-b border-gray-200 mb-6">
+                <div class="px-4 py-5 sm:px-6 flex justify-between items-center">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900">Email</h3>
+                    <p class="mt-1 max-w-2xl text-sm text-gray-500">${username}</p>
+                </div>
+                <div class="border-t border-gray-200">
+                    <dl>
+                        <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                            <dt class="text-sm font-medium text-gray-500">Anonymous ID</dt>
+                            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">${anonymousId}</dd>
+                        </div>
+                    </dl>
+                </div>
+            </div>
+    `;
+
+    // Dynamically create tables for each category of profile information
+    for (const category in userProfile) {
+        if (category !== 'email' && category !== 'bannerText' && userProfile.hasOwnProperty(category)) {
+            profileContent += `
+                <div class="bg-white shadow overflow-hidden sm:rounded-lg border-b border-gray-200 mb-6">
+                    <div class="px-4 py-5 sm:px-6">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900">${category}</h3>
+                    </div>
+                    <div class="border-t border-gray-200">
+                        <dl>
+            `;
+            for (const trait in userProfile[category]) {
+                // Skip any URL field or other fields that should not be displayed in the detail tables
+                if (trait.toLowerCase().includes('url')) continue;
+
+                profileContent += `
+                            <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                                <dt class="text-sm font-medium text-gray-500">${trait}</dt>
+                                <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">${formatValue(userProfile[category][trait])}</dd>
+                            </div>
+                `;
+            }
+            profileContent += `
+                        </dl>
+                    </div>
+                </div>
+            `;
+        }
+    }
+
+    // Append the logout button
+    profileContent += `
+            <div class="text-center mt-6">
+                <button onclick="logoutUser()" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Logout</button>
+            </div>
+        </div>
+    `;
+
+    document.getElementById('main-content').innerHTML = profileContent;
+    setBannerText();
+}
+
+// Helper function to format values for display
+function formatValue(value) {
+    if (typeof value === 'boolean') {
+        return value ? 'Yes' : 'No';
+    }
+    return value;
+}
+
 function logoutUser() {
+    // Clear local storage items related to user session
     localStorage.removeItem("loggedIn");
     localStorage.removeItem("username");
+    localStorage.removeItem("userProfile"); // Also remove the stored profile information if any
     analytics.track('User Logged Out');
     analytics.reset();
-    showLoginPage();
+    setBannerText();
+    showLoginPage(); // Redirect the user to the login page after logout
 }
