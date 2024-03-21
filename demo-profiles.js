@@ -23,6 +23,27 @@ const demoProfiles = [
         }
     },
     {
+        email: "dusty.kunze@gmailx.com",
+        bannerText: "Welcome back, Dusty! Check out our latest Webinar on <a href='#resources' class='text-blue-600 hover:text-blue-800'>Financial Wellness</a>!",
+        "Custom Traits": {
+            firstName: "Dusty",
+            lastName: "Kunze",
+            phoneNumber: "123-456-7890",
+            user_id: "bebd4977"
+        },
+        "Computed Traits": {
+            lifetime_transfer_amount: 1435,
+            preferred_transfer_method: "Direct Deposit",
+            transfers_in_last_6_months: 8,
+            support_tickets_within_last_90: 2,
+            favorite_web_resource: "Financial Literacy"
+        },
+        "Audiences": {
+            "Active Users who Prefer Direct Deposit": true,
+            "Debit Accounts with Balance >0": true
+        }
+    },
+    {
         email: "john.doe@example.com",
         bannerText: "Welcome back, John! Check out our latest Webinar on <a href='#resources' class='text-blue-600 hover:text-blue-800'>Financial Literacy</a>!",
         "Custom Traits": {
