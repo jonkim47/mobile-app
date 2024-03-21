@@ -2,6 +2,27 @@
 
 const demoProfiles = [
     {
+        email: "augustus.daugherty@gmailx.com",
+        bannerText: "Welcome back, Augustus! Check out our latest Webinar on <a href='#resources' class='text-blue-600 hover:text-blue-800'>Financial Wellness</a>!",
+        "Custom Traits": {
+            firstName: "Augustus",
+            lastName: "Daugherty",
+            phoneNumber: "123-456-7890",
+            user_id: "4b911f78"
+        },
+        "Computed Traits": {
+            lifetime_transfer_amount: 180,
+            preferred_transfer_method: "Venmo",
+            number_of_transfers_in_last_6_months: 2,
+            support_tickets_within_last_90: 1,
+            favorite_web_resource: "Financial Literacy"
+        },
+        "Audiences": {
+            "Active Users who Prefer Venmo": true,
+            "Abandoned Direct Deposit": true
+        }
+    },
+    {
         email: "john.doe@example.com",
         bannerText: "Welcome back, John! Check out our latest Webinar on <a href='#resources' class='text-blue-600 hover:text-blue-800'>Financial Literacy</a>!",
         "Custom Traits": {
